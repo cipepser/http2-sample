@@ -116,6 +116,54 @@ Got response 200: HTTP/1.1 Hello
 2018/09/01 14:58:14 Got connection: HTTP/1.1
 ```
 
+## Server Push
+
+HTTP/1.1で接続する。
+
+```Sh
+❯ go run client.go -version 1
+Got response 200: HTTP/1.1 Hello
+```
+
+結果。
+
+```sh
+2018/09/02 00:38:28 Got connection: HTTP/1.1
+2018/09/02 00:38:28 Handling 1st
+2018/09/02 00:38:28 Can\'t push to client
+```
+
+HTTP/2で接続する
+
+```sh
+❯ go run client.go -version 2
+Got response 200: HTTP/2.0 Hello
+```
+
+結果。うまくいかない。
+
+```sh
+2018/09/02 00:39:16 Got connection: HTTP/2.0
+2018/09/02 00:39:16 Handling 1st
+2018/09/02 00:39:16 Failed push: feature not supported
+```
+
+現時点では、go client上、pushがdiabledになっているらしい。
+
+
+ブラウザ(chrome)で`https://localhost:8080`へアクセスしてみて、ログを見る。
+
+```sh
+2018/09/02 00:47:46 http2: server: error reading preface from client [::1]:55036: read tcp [::1]:8080->[::1]:55036: read: connection reset by peer
+2018/09/02 00:47:53 Got connection: HTTP/2.0
+2018/09/02 00:47:53 Handling 1st
+2018/09/02 00:47:53 Got connection: HTTP/2.0
+2018/09/02 00:47:53 Handling 2nd
+2018/09/02 00:47:53 Got connection: HTTP/2.0
+2018/09/02 00:47:53 Handling 1st
+2018/09/02 00:47:53 Got connection: HTTP/2.0
+2018/09/02 00:47:53 Handling 2nd
+```
 
 ## References
 * [HTTP/2 Adventure in the Go World](https://posener.github.io/http2/)
