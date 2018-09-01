@@ -59,7 +59,65 @@ exit status 1
 2018/09/01 13:58:05 http: TLS handshake error from [::1]:52629: remote error: tls: bad certificate
 ```
 
+### オレオレ証明書を登録する
+
+上記のように`bad certificate`で怒られてしまったのでオレオレ証明書をroot CAとしてクライアントに登録する。
+
+```go
+caCert, err := ioutil.ReadFile("server.crt")
+if err != nil {
+  log.Fatalf("Reading server certificate: %s", err)
+}
+caCertPool := x509.NewCertPool()
+caCertPool.AppendCertsFromPEM(caCert)
+
+tlsConfig := &tls.Config{
+  RootCAs: caCertPool,
+}
+```
+
+#### 別案
+
+試していないが、以下で無視してしまう方法もあるらしい。
+
+```go
+&tls.Config{
+    InsecureSkipVerify: true,
+}
+```
+
+#### 実行
+
+これで実行するとうまくいく。
+
+```sh
+❯ go run client.go
+Got response 200: HTTP/2.0 Hello
+```
+
+※`http.Get(url)`が`client.Get(url)`になっていることにも注意。少しハマった。
+
+サーバ側のログ。
+
+```sh
+2018/09/01 14:57:12 Got connection: HTTP/2.0
+```
+
+#### HTTP/1.1で接続
+
+```sh
+❯ go run client.go -version 1
+Got response 200: HTTP/1.1 Hello
+```
+
+サーバ側のログ。
+
+```sh
+2018/09/01 14:58:14 Got connection: HTTP/1.1
+```
+
 
 ## References
 * [HTTP/2 Adventure in the Go World](https://posener.github.io/http2/)
 * [opensslコマンドで証明書情報を確認したい。](https://jp.globalsign.com/support/faq/07.html)
+* [\[Ssl\] Golang - 自己署名証明書付きTLS](https://code.i-harness.com/ja/q/159dbb3)
